@@ -1,0 +1,134 @@
+local library = loadstring(game:HttpGet("https://raw.githubusercontent.com/liebertsx/Tora-Library/main/src/librarynew", true))()
+local tab = library:CreateWindow("Universal Hub")
+
+-- Infinite Jump
+local InfiniteJumpEnabled = false
+local JumpConnection
+tab:AddToggle({
+	text = "Infinite Jump",
+	flag = "infjump_toggle",
+	state = false,
+	callback = function(state)
+		InfiniteJumpEnabled = state
+		if state then
+			if not JumpConnection then
+				JumpConnection = game:GetService("UserInputService").JumpRequest:Connect(function()
+					if InfiniteJumpEnabled then
+						local humanoid = game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+						if humanoid then
+							humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+						end
+					end
+				end)
+			end
+		else
+			if JumpConnection then
+				JumpConnection:Disconnect()
+				JumpConnection = nil
+			end
+		end
+	end
+})
+
+-- No Clip
+local NoClip = false
+tab:AddToggle({
+	text = "No Clip",
+	flag = "noclip_toggle",
+	callback = function(v)
+		NoClip = v
+	end
+})
+game:GetService("RunService").Stepped:Connect(function()
+	if NoClip then
+		local char = game.Players.LocalPlayer.Character
+		if char then
+			for _, part in pairs(char:GetDescendants()) do
+				if part:IsA("BasePart") then
+					part.CanCollide = false
+				end
+			end
+		end
+	end
+end)
+
+-- ESP Player
+local ESPEnabled = false
+tab:AddToggle({
+	text = "ESP Player",
+	flag = "esp_toggle",
+	callback = function(v)
+		ESPEnabled = v
+		for _, player in pairs(game.Players:GetPlayers()) do
+			if player ~= game.Players.LocalPlayer and player.Character then
+				local existing = player.Character:FindFirstChildOfClass("Highlight")
+				if v and not existing then
+					local highlight = Instance.new("Highlight")
+					highlight.FillColor = Color3.new(1, 0, 0)
+					highlight.OutlineColor = Color3.new(1, 1, 1)
+					highlight.FillTransparency = 0.5
+					highlight.Parent = player.Character
+				elseif not v and existing then
+					existing:Destroy()
+				end
+			end
+		end
+	end
+})
+
+-- Low Gravity
+tab:AddToggle({
+	text = "Low Gravity",
+	flag = "low_gravity",
+	callback = function(v)
+		workspace.Gravity = v and 50 or 196.2
+	end
+})
+
+-- Jump Power Boost
+local defaultJP = 50
+local boostedJP = 150
+tab:AddToggle({
+	text = "Jump Power Boost",
+	flag = "jump_power_toggle",
+	callback = function(v)
+		local humanoid = game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+		if humanoid then
+			humanoid.JumpPower = v and boostedJP or defaultJP
+		end
+	end
+})
+
+-- Walk Speed Boost Toggle
+local defaultWS = 16
+local boostedWS = 100
+tab:AddToggle({
+	text = "Walk Speed Boost",
+	flag = "walk_speed_toggle",
+	callback = function(v)
+		local humanoid = game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+		if humanoid then
+			humanoid.WalkSpeed = v and boostedWS or defaultWS
+		end
+	end
+})
+
+local tab = library:CreateWindow("Script")
+
+tab:AddButton({
+	text = "Infinite Yield",
+	flag = "button",
+	callback = function()
+	loadstring(game:HttpGet(('https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source'),true))()
+end
+})
+
+tab:AddButton({
+	text = "Nameless Admin",
+	flag = "button",
+	callback = function()
+	loadstring(game:HttpGet("https://raw.githubusercontent.com/ltseverydayyou/Nameless-Admin/main/Source.lua"))()
+end
+})
+
+library:Init()
