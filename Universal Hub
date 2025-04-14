@@ -1,38 +1,33 @@
 local library = loadstring(game:HttpGet("https://raw.githubusercontent.com/liebertsx/Tora-Library/main/src/librarynew", true))()
-local tab = library:CreateWindow("Universal Hub")
+
+local universalTab = library:CreateWindow("Universal Hub")
+local scriptTab = library:CreateWindow("Script Tools")
 
 -- Infinite Jump
 local InfiniteJumpEnabled = false
 local JumpConnection
-tab:AddToggle({
+universalTab:AddToggle({
 	text = "Infinite Jump",
 	flag = "infjump_toggle",
-	state = false,
 	callback = function(state)
 		InfiniteJumpEnabled = state
-		if state then
-			if not JumpConnection then
-				JumpConnection = game:GetService("UserInputService").JumpRequest:Connect(function()
-					if InfiniteJumpEnabled then
-						local humanoid = game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
-						if humanoid then
-							humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
-						end
-					end
-				end)
-			end
-		else
-			if JumpConnection then
-				JumpConnection:Disconnect()
-				JumpConnection = nil
-			end
+		if state and not JumpConnection then
+			JumpConnection = game:GetService("UserInputService").JumpRequest:Connect(function()
+				local humanoid = game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+				if humanoid and InfiniteJumpEnabled then
+					humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+				end
+			end)
+		elseif not state and JumpConnection then
+			JumpConnection:Disconnect()
+			JumpConnection = nil
 		end
 	end
 })
 
 -- No Clip
 local NoClip = false
-tab:AddToggle({
+universalTab:AddToggle({
 	text = "No Clip",
 	flag = "noclip_toggle",
 	callback = function(v)
@@ -53,12 +48,10 @@ game:GetService("RunService").Stepped:Connect(function()
 end)
 
 -- ESP Player
-local ESPEnabled = false
-tab:AddToggle({
+universalTab:AddToggle({
 	text = "ESP Player",
 	flag = "esp_toggle",
 	callback = function(v)
-		ESPEnabled = v
 		for _, player in pairs(game.Players:GetPlayers()) do
 			if player ~= game.Players.LocalPlayer and player.Character then
 				local existing = player.Character:FindFirstChildOfClass("Highlight")
@@ -77,7 +70,7 @@ tab:AddToggle({
 })
 
 -- Low Gravity
-tab:AddToggle({
+universalTab:AddToggle({
 	text = "Low Gravity",
 	flag = "low_gravity",
 	callback = function(v)
@@ -88,7 +81,7 @@ tab:AddToggle({
 -- Jump Power Boost
 local defaultJP = 50
 local boostedJP = 150
-tab:AddToggle({
+universalTab:AddToggle({
 	text = "Jump Power Boost",
 	flag = "jump_power_toggle",
 	callback = function(v)
@@ -99,10 +92,10 @@ tab:AddToggle({
 	end
 })
 
--- Walk Speed Boost Toggle
+-- Walk Speed Boost
 local defaultWS = 16
 local boostedWS = 100
-tab:AddToggle({
+universalTab:AddToggle({
 	text = "Walk Speed Boost",
 	flag = "walk_speed_toggle",
 	callback = function(v)
@@ -113,22 +106,80 @@ tab:AddToggle({
 	end
 })
 
-local tab = library:CreateWindow("Script")
+-- Fly (Mobile)
+local flying = false
+local flySpeed = 50
+local bodyGyro, bodyVelocity
+universalTab:AddToggle({
+	text = "Fly (Mobile)",
+	flag = "fly_toggle",
+	callback = function(state)
+		local player = game.Players.LocalPlayer
+		local char = player.Character
+		local hrp = char and char:FindFirstChild("HumanoidRootPart")
+		if state and hrp then
+			flying = true
+			bodyGyro = Instance.new("BodyGyro", hrp)
+			bodyGyro.P = 9e4
+			bodyGyro.MaxTorque = Vector3.new(9e9, 9e9, 9e9)
+			bodyGyro.CFrame = hrp.CFrame
+			bodyVelocity = Instance.new("BodyVelocity", hrp)
+			bodyVelocity.Velocity = Vector3.new(0, 0, 0)
+			bodyVelocity.MaxForce = Vector3.new(9e9, 9e9, 9e9)
 
-tab:AddButton({
+			local cam = workspace.CurrentCamera
+			game:GetService("RunService").RenderStepped:Connect(function()
+				if flying and hrp and bodyVelocity and bodyGyro then
+					bodyVelocity.Velocity = cam.CFrame.LookVector * flySpeed
+					bodyGyro.CFrame = cam.CFrame
+				end
+			end)
+		else
+			flying = false
+			if bodyGyro then bodyGyro:Destroy() end
+			if bodyVelocity then bodyVelocity:Destroy() end
+		end
+	end
+})
+
+-- Anti AFK
+universalTab:AddButton({
+	text = "Anti AFK",
+	callback = function()
+		local vu = game:GetService("VirtualUser")
+		game:GetService("Players").LocalPlayer.Idled:Connect(function()
+			vu:Button2Down(Vector2.new(0,0), workspace.CurrentCamera.CFrame)
+			wait(1)
+			vu:Button2Up(Vector2.new(0,0), workspace.CurrentCamera.CFrame)
+		end)
+	end
+})
+
+-- Reset Character
+universalTab:AddButton({
+	text = "Reset Character",
+	callback = function()
+		local plr = game.Players.LocalPlayer
+		if plr.Character then
+			plr.Character:BreakJoints()
+		end
+	end
+})
+
+-- Script Tools
+scriptTab:AddButton({
 	text = "Infinite Yield",
-	flag = "button",
 	callback = function()
-	loadstring(game:HttpGet(('https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source'),true))()
-end
+		loadstring(game:HttpGet("https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source", true))()
+	end
 })
 
-tab:AddButton({
+scriptTab:AddButton({
 	text = "Nameless Admin",
-	flag = "button",
 	callback = function()
-	loadstring(game:HttpGet("https://raw.githubusercontent.com/ltseverydayyou/Nameless-Admin/main/Source.lua"))()
-end
+		loadstring(game:HttpGet("https://raw.githubusercontent.com/ltseverydayyou/Nameless-Admin/main/Source.lua"))()
+	end
 })
 
+-- Inisialisasi UI
 library:Init()
